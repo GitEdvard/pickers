@@ -14,7 +14,7 @@ local files = {}
 
 local get_selected_text = function(prompt_bufnr)
     local selection = action_state.get_selected_entry(prompt_bufnr)
-    return selection.text
+    return selection[1]
 end
 
 local trigger_actions = function(prompt_bufnr)
@@ -28,53 +28,22 @@ end
 
 local config_picker_fnc = function(opts)
   opts = opts or {}
-  local results = {}
-  local widths = {
-    text = 0,
-  }
-
-  local parse_line = function(line)
-    local entry = {
-      text = line,
-    }
-    local index = #results + 1
-    for key, val in pairs(widths) do
-      local entry_len = strings.strdisplaywidth(entry[key] or "")
-      widths[key] = math.max(val, entry_len)
-    end
-    table.insert(results, index, entry)
-  end
-
-  for _, line in ipairs(opts.entries) do
-    parse_line(line)
-  end
-
-  if #results == 0 then
-    return
-  end
 
   opts.entry_maker = opts.entry_maker or make_entry.gen_from_file(opts)
 
-  pickers.new(opts or {}, {
-      prompt_title = opts.title or "Find Files",
-      finder = finders.new_table {
-        results = results,
-        entry_maker = opts.entry_maker
-      },
-      entry_maker = opts.entry_maker,
-      previewer = conf.file_previewer(opts),
-      sorter = conf.file_sorter(opts),
-      attach_mappings = function(_, map)
-          action_set.select:replace(trigger_actions)
-          return true
-      end
-    })
-    :find()
+  require('telescope.builtin').find_files({
+    prompt_title = opts.title,
+    search_dirs= opts.search_dirs,
+    attach_mappings = function(_, map)
+      actions.select_default:replace(trigger_actions)
+      return true
+    end
+  })
+
 end
 
-return require("telescope").register_extension(
-           {
-        exports = {
-            config_picker = config_picker_fnc
-        }
-    })
+return require("telescope").register_extension({
+  exports = {
+      config_picker = config_picker_fnc
+  }
+})
