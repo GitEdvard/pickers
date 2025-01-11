@@ -1,5 +1,7 @@
 # config-picker
 
+Experimental. Using a file picker for handling config files.
+
 ## Usage
 ```
 require("telescope").load_extension("config_picker")
