@@ -1,5 +1,6 @@
 local M = {}
 local on_change_callbacks = {}
+local on_indata_open_callbacks = {}
 
 M.emit_on_change = function(metadata)
   for idx = 1, #on_change_callbacks do
@@ -9,6 +10,16 @@ end
 
 M.on_config_selected = function(cb)
   table.insert(on_change_callbacks, cb)
+end
+
+M.emit_on_indata_open = function(metadata)
+  for idx = 1, #on_indata_open_callbacks do
+    on_indata_open_callbacks[idx](metadata)
+  end
+end
+
+M.on_indata_open = function(cb)
+  table.insert(on_indata_open_callbacks, cb)
 end
 
 M.reset = function()

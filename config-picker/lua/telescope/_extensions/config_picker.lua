@@ -21,6 +21,15 @@ local trigger_actions = function(prompt_bufnr)
   end
 end
 
+local open_indata = function(prompt_bufnr)
+  local selection = get_selected_text(prompt_bufnr)
+  actions.close(prompt_bufnr)
+  local metadata = { ["text"] = selection }
+  if metadata ~= nil then
+    callback_handler.emit_on_indata_open(metadata)
+  end
+end
+
 local config_picker_fnc = function(opts)
   opts = opts or {}
   -- local opts.entries = {}
@@ -80,6 +89,7 @@ local config_picker_fnc = function(opts)
       sorter = conf.generic_sorter(opts),
       attach_mappings = function(_, map)
           action_set.select:replace(trigger_actions)
+          map("i", "<c-i>", open_indata)
           return true
       end
   }):find()
