@@ -21,6 +21,27 @@ local trigger_actions = function(prompt_bufnr)
   end
 end
 
+local wrap_user_defined = function(prompt_bufnr, user_defined_fnc)
+  local selection = get_selected_text(prompt_bufnr)
+  actions.close(prompt_bufnr)
+  local metadata = { ["text"] = selection }
+  if metadata ~= nil then
+    user_defined_fnc(selection)
+  end
+end
+
+local apply_external_mappings = function(opts, prompt_bufnr, map)
+  local mappings = opts.mappings or {}
+  for mode, binding in pairs(mappings) do
+    for key, fnc in pairs(binding) do
+      local wrapped_fnc = function()
+        wrap_user_defined(prompt_bufnr, fnc)
+      end
+      map(mode, key, wrapped_fnc)
+    end
+  end
+end
+
 local simple_picker_fnc = function(opts)
   opts = opts or {}
   -- local opts.entries = {}
@@ -78,8 +99,9 @@ local simple_picker_fnc = function(opts)
           end,
       },
       sorter = conf.generic_sorter(opts),
-      attach_mappings = function(_, map)
+      attach_mappings = function(prompt_bufnr, map)
           action_set.select:replace(trigger_actions)
+          apply_external_mappings(opts, prompt_bufnr, map)
           return true
       end
   }):find()

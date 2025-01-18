@@ -74,6 +74,27 @@ local config_picker_fnc = function(opts)
     }
   end
 
+  local wrap_user_defined = function(prompt_bufnr, user_defined_fnc)
+    local selection = get_selected_text(prompt_bufnr)
+    actions.close(prompt_bufnr)
+    local metadata = { ["text"] = selection }
+    if metadata ~= nil then
+      user_defined_fnc(selection)
+    end
+  end
+
+  local apply_mappings = function(opts, prompt_bufnr, map)
+    local mappings = opts.mappings or {}
+    for mode, binding in pairs(mappings) do
+      for key, fnc in pairs(binding) do
+        local wrapped_fnc = function()
+          wrap_user_defined(prompt_bufnr, fnc)
+        end
+        map(mode, key, wrapped_fnc)
+      end
+    end
+  end
+
   pickers.new(opts or {}, {
       prompt_title = opts.title or "Pick something",
       -- prompt_title = "Run configurations",
@@ -87,8 +108,9 @@ local config_picker_fnc = function(opts)
           end,
       },
       sorter = conf.generic_sorter(opts),
-      attach_mappings = function(_, map)
+      attach_mappings = function(prompt_bufnr, map)
           action_set.select:replace(trigger_actions)
+          apply_mappings(opts, prompt_bufnr, map)
           map("i", "<c-i>", open_indata)
           return true
       end
